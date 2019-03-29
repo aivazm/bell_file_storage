@@ -26,11 +26,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Override
-    protected void configure(HttpSecurity http){
-        try {
+    protected void configure(HttpSecurity http) throws Exception {
             http
                     .authorizeRequests()
-                    .antMatchers("/", "/registration", "/user/activate/*").permitAll()
+                    .mvcMatchers("/", "/registration", "/user/activate/*").permitAll()
                     .anyRequest().authenticated()
                     .and()
                     .formLogin()
@@ -39,18 +38,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                     .and()
                     .logout()
                     .permitAll();
-        } catch (Exception e) {
-            throw new RuntimeException("Error while trying set authorizeRequests", e);
-        }
     }
 
     @Override
-    protected void configure(AuthenticationManagerBuilder auth) {
-        try {
-            auth.userDetailsService(userService)
-                    .passwordEncoder(passwordEncoder);
-        } catch (Exception e) {
-            throw new RuntimeException("Error while trying set userDetailsService", e);
-        }
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+            auth.userDetailsService(userService).passwordEncoder(passwordEncoder);
+
     }
 }

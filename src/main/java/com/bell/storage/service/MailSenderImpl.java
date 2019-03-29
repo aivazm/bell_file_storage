@@ -25,6 +25,7 @@ public class MailSenderImpl implements MailSender {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void send(String emailTo, String subject, String message) {
         SimpleMailMessage mailMessage = new SimpleMailMessage();
 

@@ -1,10 +1,10 @@
 package com.bell.storage.service;
 
 import com.bell.storage.configuration.ControllerUtils;
-import com.bell.storage.dao.UserDao;
 import com.bell.storage.dto.UserDto;
 import com.bell.storage.model.Role;
 import com.bell.storage.model.User;
+import com.bell.storage.repository.UserRepo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,23 +32,27 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     @Value("${host.path}")
     private String hostPath;
 
-    //    private final ConversionService converter;
     private final MailSender mailSender;
     private final PasswordEncoder passwordEncoder;
-    private final UserDao userDao;
+    private final UserRepo userRepo;
 
-    public UserServiceImpl(MailSender mailSender, PasswordEncoder passwordEncoder, UserDao userDao) {
+    public UserServiceImpl(MailSender mailSender, PasswordEncoder passwordEncoder, UserRepo userRepo) {
         this.mailSender = mailSender;
         this.passwordEncoder = passwordEncoder;
-        this.userDao = userDao;
+        this.userRepo = userRepo;
     }
 
+    /**
+     * ПОлучение юзера по имени.
+     * @param username
+     * @return
+     */
     @Override
     public UserDetails loadUserByUsername(String username) {
         if (StringUtils.isBlank(username)) {
             throw new RuntimeException("Empty parameters");
         }
-        User user = userDao.loadUserByUsername(username);
+        User user = userRepo.findByUsername(username);
         if (user == null) {
             throw new RuntimeException("User not found");
         }
@@ -58,6 +62,7 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String addUser(String passwordConfirm, @Valid UserDto userDto, BindingResult bindingResult, Model model) {
         if (StringUtils.isBlank(passwordConfirm) || userDto == null || bindingResult == null || model == null) {
             throw new RuntimeException("Empty parameters");
@@ -76,7 +81,7 @@ public class UserServiceImpl implements UserDetailsService, UserService {
             return "registration";
         }
 
-        User userFromDb = userDao.loadUserByUsername(userDto.getUsername());
+        User userFromDb = userRepo.findByUsername(userDto.getUsername());
         if (userFromDb != null) {
             model.addAttribute("usernameError", "User exists!");
             return "registration";
@@ -92,7 +97,7 @@ public class UserServiceImpl implements UserDetailsService, UserService {
                 .dateOfRegistration(System.currentTimeMillis())
                 .build();
 
-        userDao.saveUser(user);
+        userRepo.save(user);
         sendMessage(user);
         return "redirect:/login";
 
@@ -101,42 +106,45 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void activateUser(String code, Model model) {
         if (StringUtils.isBlank(code)) {
             throw new RuntimeException("Empty parameters");
         }
-        User user = userDao.activateUser(code);
-        if (user == null) {
+        User user = userRepo.findByActivationCode(code);
+        if (System.currentTimeMillis() - user.getDateOfRegistration() > 86_400_000) {
+            userRepo.delete(user);
             model.addAttribute("message", "Activation code is not valid or not found.");
             return;
         }
         user.setActivationCode(null);
         user.setActive(true);
 
-        if (userDao.saveUser(user) != null) {
-            sendMessage(user);
+        if (userRepo.save(user) != null) {
             model.addAttribute("message", "User successfully activated");
         } else {
             throw new RuntimeException("User activation failed");
         }
+
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void findAll(Model model) {
-        model.addAttribute("users", userDao.findAllUsers());
+        model.addAttribute("users", userRepo.findAll());
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void changeUserRole(UserDto userDto, String username, Map<String, String> form) {
         if (StringUtils.isBlank(username) || userDto == null || form == null) {
             throw new RuntimeException("Empty parameters");
         }
-
-        User user = userDao.loadUserByUsername(username);
+        User user = userRepo.findByUsername(username);
 
         Set<String> roles = Arrays.stream(Role.values())
                 .map(Role::name)
@@ -148,7 +156,7 @@ public class UserServiceImpl implements UserDetailsService, UserService {
                 user.getRoles().add(Role.valueOf(key));
             }
         }
-        if (userDao.saveUser(user) == null) {
+        if (userRepo.save(user) == null) {
             throw new RuntimeException("User change failed");
         }
     }
@@ -156,6 +164,7 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void getProfile(Model model, UserDto userDto) {
         model.addAttribute("username", userDto.getUsername());
         model.addAttribute("email", userDto.getEmail());
@@ -164,11 +173,12 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void updateProfile(UserDto userDto, String password, String email) {
         if (StringUtils.isBlank(password) || userDto == null || StringUtils.isBlank(email)) {
             throw new RuntimeException("Empty parameters");
         }
-        User user = userDao.loadUserByUsername(userDto.getUsername());
+        User user = userRepo.findByUsername(userDto.getUsername());
         String userEmail = userDto.getEmail();
         if (!StringUtils.isBlank(email)) {
             if (!email.equals(userEmail) || !userEmail.equals(email)) {
@@ -182,7 +192,7 @@ public class UserServiceImpl implements UserDetailsService, UserService {
         if (!StringUtils.isBlank(password)) {
             user.setPassword(passwordEncoder.encode(password));
         }
-        if (userDao.saveUser(user) == null) {
+        if (userRepo.save(user) == null) {
             throw new RuntimeException("User update error");
         }
         sendMessage(user);
@@ -191,6 +201,7 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void userEditForm(UserDto userDto, Model model) {
         model.addAttribute("user", userDto);
         model.addAttribute("roles", Role.values());

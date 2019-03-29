@@ -1,12 +1,13 @@
 package com.bell.storage.service;
 
-import com.bell.storage.dao.UserDao;
 import com.bell.storage.dto.UserDto;
 import com.bell.storage.model.User;
+import com.bell.storage.repository.UserRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -15,20 +16,21 @@ import java.util.Set;
 @Service
 public class AccessServiceImpl implements AccessService {
 
-    private final UserDao userDao;
+    private final UserRepo userRepo;
 
-    public AccessServiceImpl(UserDao userDao) {
-        this.userDao = userDao;
+    public AccessServiceImpl(UserRepo userRepo) {
+        this.userRepo = userRepo;
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void getAccessAndRequest(UserDto currentUserDto, Model model) {
         if (currentUserDto == null || model == null) {
             throw new RuntimeException("Empty parameters");
         }
-        User user = userDao.loadUserByUsername(currentUserDto.getUsername());
+        User user = userRepo.findByUsername(currentUserDto.getUsername());
 
         Set<UserDto> requestsToVisibleDto = new HashSet<>();
         Set<UserDto> requestsToDownloadDto = new HashSet<>();
@@ -65,121 +67,137 @@ public class AccessServiceImpl implements AccessService {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void requestToVisibleAccess(UserDto currentUserDto, Long userId) {
         if (currentUserDto == null || userId == null || userId < 1) {
             throw new RuntimeException("Empty parameters");
         }
-        User currentUser = userDao.loadUserByUsername(currentUserDto.getUsername());
-        User user = userDao.getUserById(userId);
+        User currentUser = userRepo.findByUsername(currentUserDto.getUsername());
+        User user = getUserById(userId);
         if (!user.getRequestsToVisible().contains(currentUser)
                 && !user.getVisibleTenants().contains(currentUser)) {
             user.getRequestsToVisible().add(currentUser);
-            userDao.saveUser(user);
+            userRepo.save(user);
         }
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void requestToDownloadAccess(UserDto currentUserDto, Long userId) {
         if (currentUserDto == null || userId == null || userId < 1) {
             throw new RuntimeException("Empty parameters");
         }
-        User currentUser = userDao.loadUserByUsername(currentUserDto.getUsername());
-        User user = userDao.getUserById(userId);
-
+        User currentUser = userRepo.findByUsername(currentUserDto.getUsername());
+        User user = getUserById(userId);
         if (!user.getRequestsToDownload().contains(currentUser)
                 && !user.getDownloadTenants().contains(currentUser)) {
             user.getRequestsToDownload().add(currentUser);
-            userDao.saveUser(user);
+            userRepo.save(user);
         }
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void confirmVisibleAccess(UserDto currentUserDto, Long userId) {
         if (currentUserDto == null || userId == null || userId < 1) {
             throw new RuntimeException("Empty parameters");
         }
-        User currentUser = userDao.loadUserByUsername(currentUserDto.getUsername());
-        User user = userDao.getUserById(userId);
+        User currentUser = userRepo.findByUsername(currentUserDto.getUsername());
+        User user = getUserById(userId);
         currentUser.getVisibleTenants().add(user);
         currentUser.getRequestsToVisible().remove(user);
-        userDao.saveUser(currentUser);
+        userRepo.save(currentUser);
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void confirmDownloadAccess(UserDto currentUserDto, Long userId) {
         if (currentUserDto == null || userId == null || userId < 1) {
             throw new RuntimeException("Empty parameters");
         }
-        User currentUser = userDao.loadUserByUsername(currentUserDto.getUsername());
-        User user = userDao.getUserById(userId);
+        User currentUser = userRepo.findByUsername(currentUserDto.getUsername());
+        User user = getUserById(userId);
         currentUser.getDownloadTenants().add(user);
         currentUser.getRequestsToDownload().remove(user);
-        userDao.saveUser(currentUser);
+        userRepo.save(currentUser);
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void refuseVisibleAccess(UserDto currentUserDto, Long userId) {
         if (currentUserDto == null || userId == null || userId < 1) {
             throw new RuntimeException("Empty parameters");
         }
-        User currentUser = userDao.loadUserByUsername(currentUserDto.getUsername());
-        User user = userDao.getUserById(userId);
+        User currentUser = userRepo.findByUsername(currentUserDto.getUsername());
+        User user = getUserById(userId);
         if (currentUser.getRequestsToVisible().contains(user)) {
             currentUser.getRequestsToVisible().remove(user);
-            userDao.saveUser(currentUser);
+            userRepo.save(currentUser);
         }
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void refuseDownloadAccess(UserDto currentUserDto, Long userId) {
         if (currentUserDto == null || userId == null || userId < 1) {
             throw new RuntimeException("Empty parameters");
         }
-        User currentUser = userDao.loadUserByUsername(currentUserDto.getUsername());
-        User user = userDao.getUserById(userId);
+        User currentUser = userRepo.findByUsername(currentUserDto.getUsername());
+        User user = getUserById(userId);
         if (currentUser.getRequestsToDownload().contains(user)) {
             currentUser.getRequestsToDownload().remove(user);
-            userDao.saveUser(currentUser);
+            userRepo.save(currentUser);
         }
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void cancelVisibleAccess(UserDto currentUserDto, Long userId) {
         if (currentUserDto == null || userId == null || userId < 1) {
             throw new RuntimeException("Empty parameters");
         }
-        User currentUser = userDao.loadUserByUsername(currentUserDto.getUsername());
-        User user = userDao.getUserById(userId);
+        User currentUser = userRepo.findByUsername(currentUserDto.getUsername());
+        User user = getUserById(userId);
         if (currentUser.getVisibleTenants().contains(user)) {
             currentUser.getVisibleTenants().remove(user);
-            userDao.saveUser(currentUser);
+            userRepo.save(currentUser);
         }
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void cancelDownloadAccess(UserDto currentUserDto, Long userId) {
         if (currentUserDto == null || userId == null || userId < 1) {
             throw new RuntimeException("Empty parameters");
         }
-        User currentUser = userDao.loadUserByUsername(currentUserDto.getUsername());
-        User user = userDao.getUserById(userId);
+        User currentUser = userRepo.findByUsername(currentUserDto.getUsername());
+        User user = getUserById(userId);
         if (currentUser.getDownloadTenants().contains(user)) {
             currentUser.getDownloadTenants().remove(user);
-            userDao.saveUser(currentUser);
+            userRepo.save(currentUser);
+        }
+    }
+
+    private User getUserById (Long id){
+        Optional<User> optional = userRepo.findById(id);
+        if (optional.isPresent()) {
+            return optional.get();
+        } else {
+            throw new RuntimeException("User not found");
         }
     }
 }

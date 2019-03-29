@@ -1,11 +1,11 @@
 package com.bell.storage.service;
 
-import com.bell.storage.dao.UserDao;
-import com.bell.storage.dao.UsersFileDao;
 import com.bell.storage.dto.UserDto;
 import com.bell.storage.dto.UsersFileDto;
 import com.bell.storage.model.User;
 import com.bell.storage.model.UsersFile;
+import com.bell.storage.repository.UserRepo;
+import com.bell.storage.repository.UsersFileRepo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * {@inheritDoc}
@@ -25,27 +26,29 @@ import java.util.Map;
 @Service
 public class FileServiceImpl implements FileService {
 
-    private final UsersFileDao usersFileDao;
-    private final UserDao userDao;
+    private final UsersFileRepo usersFileRepo;
+    private final UserRepo userRepo;
 
-    public FileServiceImpl(UsersFileDao usersFileDao, UserDao userDao) {
-        this.usersFileDao = usersFileDao;
-        this.userDao = userDao;
+    public FileServiceImpl(UsersFileRepo usersFileRepo, UserRepo userRepo) {
+        this.usersFileRepo = usersFileRepo;
+        this.userRepo = userRepo;
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void getMyFiles(UserDto userDto, Model model) {
         if (userDto == null || model == null) {
             throw new RuntimeException("Empty parameters");
         }
-        getListOfFilesAndRequests(userDao.loadUserByUsername(userDto.getUsername()), model);
+        getListOfFilesAndRequests(userRepo.findByUsername(userDto.getUsername()), model);
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void addFile(UserDto userDto,
                         UsersFileDto usersFileDto,
                         Model model,
@@ -53,7 +56,7 @@ public class FileServiceImpl implements FileService {
         if (userDto == null || usersFileDto == null || model == null || file == null) {
             throw new RuntimeException("Empty parameters");
         }
-        User user = userDao.loadUserByUsername(userDto.getUsername());
+        User user = userRepo.findByUsername(userDto.getUsername());
         if (userDto.isActive() && !StringUtils.isBlank(file.getOriginalFilename())) {
             try {
                 usersFileDto.setFileInBytes(file.getBytes());
@@ -68,7 +71,7 @@ public class FileServiceImpl implements FileService {
                     .downloadCount(usersFileDto.getDownloadCount())
                     .build();
 
-            usersFileDao.saveFile(usersFile);
+            usersFileRepo.save(usersFile);
         }
         getListOfFilesAndRequests(user, model);
     }
@@ -76,15 +79,24 @@ public class FileServiceImpl implements FileService {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void userFiles(UserDto currentUserDto,
                           Long id,
                           Model model) {
         if (currentUserDto == null || id == null || id < 1 || model == null) {
             throw new RuntimeException("Empty parameters");
         }
+        User user;
+        User currentUser;
+        Optional<User> userOptional = userRepo.findById(id);
+        Optional<User> currentUserOptional = userRepo.findById(currentUserDto.getId());
 
-        User user = userDao.getUserById(id);
-        User currentUser = userDao.getUserById(currentUserDto.getId());
+        if (userOptional.isPresent() & currentUserOptional.isPresent()) {
+            user = userOptional.get();
+            currentUser = currentUserOptional.get();
+        } else {
+            throw new RuntimeException("User not found");
+        }
 
         Map<UsersFile, Integer> files = new HashMap<>();
         for (UsersFile usersFile : user.getFiles()) {
@@ -99,13 +111,14 @@ public class FileServiceImpl implements FileService {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void getAllUsers(UserDto currentUser, Model model) {
         if (currentUser == null || model == null) {
             throw new RuntimeException("Empty parameters");
         }
         Map<UserDto, Integer> users = new HashMap<>();
         UserDto userDto;
-        for (User user : userDao.findAllUsers()) {
+        for (User user : userRepo.findAll()) {
             userDto = ModelToDtoConverterUtils.convertUserToUserDto(user);
             users.put(userDto, userDto.getFiles().size());
         }
@@ -117,35 +130,52 @@ public class FileServiceImpl implements FileService {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String deleteFileById(UserDto currentUserDto, Long id, Model model) {
         if (currentUserDto == null || id == null || id < 1 || model == null) {
             throw new RuntimeException("Empty parameters");
         }
         String result;
-        Long ownerId = usersFileDao.getFilesById(id).getOwner().getId();
-        usersFileDao.deleteFileById(id);
+        UsersFile usersFile;
+        Optional<UsersFile> usersFileOptional = usersFileRepo.findById(id);
+
+        if (usersFileOptional.isPresent()) {
+            usersFile = usersFileOptional.get();
+        } else {
+            throw new RuntimeException("File not found");
+        }
+        Long ownerId = usersFile.getOwner().getId();
+        usersFileRepo.deleteById(id);
         if (ownerId.equals(currentUserDto.getId())) {
             result = "redirect:/main";
         } else {
             result = "redirect:/user-files/" + ownerId;
         }
-        getListOfFilesAndRequests(userDao.loadUserByUsername(currentUserDto.getUsername()), model);
+        getListOfFilesAndRequests(userRepo.findByUsername(currentUserDto.getUsername()), model);
         return result;
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public ResponseEntity downloadFileById(Long id, UserDto userDto, Model model) {
         if (userDto == null || id == null || id < 1 || model == null) {
             throw new RuntimeException("Empty parameters");
         }
 
-        UsersFile usersFile = usersFileDao.getFilesById(id);
-        getListOfFilesAndRequests(userDao.loadUserByUsername(userDto.getUsername()), model);
+        UsersFile usersFile;
+        Optional<UsersFile> usersFileOptional = usersFileRepo.findById(id);
+
+        if (usersFileOptional.isPresent()) {
+            usersFile = usersFileOptional.get();
+        } else {
+            throw new RuntimeException("File not found");
+        }
+        getListOfFilesAndRequests(userRepo.findByUsername(userDto.getUsername()), model);
 
         usersFile.setDownloadCount(usersFile.getDownloadCount() + 1);
-        if (usersFileDao.saveFile(usersFile) == null) {
+        if (usersFileRepo.save(usersFile) == null) {
             throw new RuntimeException("Error saving file");
         }
         return ResponseEntity.ok()
@@ -156,6 +186,6 @@ public class FileServiceImpl implements FileService {
 
     private void getListOfFilesAndRequests(User user, Model model) {
         model.addAttribute("numberOfRequests", user.getRequestsToVisible().size() + user.getRequestsToDownload().size());
-        model.addAttribute("files", usersFileDao.getFilesByOwner(user));
+        model.addAttribute("files", usersFileRepo.findByOwner(user));
     }
 }
