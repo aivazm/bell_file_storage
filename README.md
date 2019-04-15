@@ -30,10 +30,10 @@ aivazm2@gmail.com
 
 Запуск
 ------
-Скачать проект
+Используемая СУБД: PostgreSQL
 
-Используемая СУБД - PostgreSQL
+Имя БД: "file_storage"
 
-Имя БД - file_storage
+Имя БД для тестов: "file_storage_test"
 
 Host path - http://localhost:8080/
