@@ -88,7 +88,6 @@ public class AccessControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/accessAndRequestPage/"))
                 .andReturn();
-
     }
 
     @Test
