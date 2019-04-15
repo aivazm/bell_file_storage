@@ -6,9 +6,9 @@ package com.bell.storage.service;
 public interface MailSender {
     /**
      * Отправить письмо с текстом message на адрес emailTo
-     * @param emailTo
-     * @param subject
-     * @param message
+     * @param emailTo адресат
+     * @param subject тема письма
+     * @param message текст письма
      */
     void send(String emailTo, String subject, String message);
 }

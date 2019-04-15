@@ -18,6 +18,7 @@ import javax.validation.Valid;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -44,6 +45,7 @@ public class UserServiceImpl implements UserDetailsService, UserService {
 
     /**
      * ПОлучение юзера по имени.
+     *
      * @param username
      * @return
      */
@@ -140,11 +142,18 @@ public class UserServiceImpl implements UserDetailsService, UserService {
      * {@inheritDoc}
      */
     @Override
-    public void changeUserRole(UserDto userDto, String username, Map<String, String> form) {
-        if (StringUtils.isBlank(username) || userDto == null || form == null) {
+    public void changeUserRole(Long userId, String username, Map<String, String> form) {
+        if (StringUtils.isBlank(username) || userId == null || userId < 1 || form == null) {
             throw new RuntimeException("Empty parameters");
         }
-        User user = userRepo.findByUsername(username);
+        User user;
+        Optional<User> userOptional = userRepo.findById(userId);
+
+        if (userOptional.isPresent()) {
+            user = userOptional.get();
+        } else {
+            throw new RuntimeException("File not found");
+        }
 
         Set<String> roles = Arrays.stream(Role.values())
                 .map(Role::name)
@@ -202,8 +211,16 @@ public class UserServiceImpl implements UserDetailsService, UserService {
      * {@inheritDoc}
      */
     @Override
-    public void userEditForm(UserDto userDto, Model model) {
-        model.addAttribute("user", userDto);
+    public void userEditForm(Long id, Model model) {
+        User user;
+        Optional<User> userOptional = userRepo.findById(id);
+
+        if (userOptional.isPresent()) {
+            user = userOptional.get();
+        } else {
+            throw new RuntimeException("File not found");
+        }
+        model.addAttribute("user", user);
         model.addAttribute("roles", Role.values());
     }
 

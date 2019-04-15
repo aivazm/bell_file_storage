@@ -93,10 +93,18 @@ public class User {
     )
     private Set<User> downloadTenants = new HashSet<>();
 
+    /**
+     * Проверка роли пользователя.
+     * @return Возвращает true, если множество ролей пользователя содержит значение ADMIN, иначе - false
+     */
     public boolean isAdmin() {
         return roles.contains(Role.ADMIN);
     }
 
+    /**
+     * Проверка роли пользователя.
+     * @return Возвращает true, если множество ролей пользователя содержит значение ANALYST, иначе - false
+     */
     public boolean isAnalyst() {
         return roles.contains(Role.ANALYST);
     }

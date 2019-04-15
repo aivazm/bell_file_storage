@@ -31,6 +31,10 @@ public class MailConfig {
     @Value("${mail.debug}")
     private String debug;
 
+    /**
+     *
+     * @return Бин JavaMailSender
+     */
     @Bean
     public JavaMailSender getMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();

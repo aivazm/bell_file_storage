@@ -14,8 +14,10 @@ import org.springframework.validation.BindingResult;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 public class UserServiceImplTest {
@@ -29,6 +31,7 @@ public class UserServiceImplTest {
     private final Model model = mock(Model.class);
     private Iterable<User> users;
     private Map<String, String> form;
+    private final long ID = 1L;
 
     private UserServiceImpl service;
     private final String USERNAME = "username";
@@ -45,6 +48,8 @@ public class UserServiceImplTest {
         users = new ArrayList<>();
         form = new HashMap<>();
         userMock.setDateOfRegistration(System.currentTimeMillis());
+        Optional<User> userOptional = Optional.of(userMock);
+        when(userRepoMock.findById(ID)).thenReturn(userOptional);
         when(userRepoMock.findByUsername(USERNAME)).thenReturn(userMock);
         when(userDtoMock.getUsername()).thenReturn(USERNAME);
         when(userDtoMock.getPassword()).thenReturn(PASSWORD_CONFIRM);
@@ -58,7 +63,7 @@ public class UserServiceImplTest {
     @Test
     public void loadUserByUsername() {
         service.loadUserByUsername(USERNAME);
-        Mockito.verify(userRepoMock, Mockito.times(1)).findByUsername(USERNAME);
+        Mockito.verify(userRepoMock, times(1)).findByUsername(USERNAME);
     }
 
     @Test(expected = RuntimeException.class)
@@ -70,7 +75,7 @@ public class UserServiceImplTest {
     @Test
     public void addUser() {
         service.addUser(PASSWORD_CONFIRM, userDtoMock, bindingResult, model);
-        Mockito.verify(userRepoMock, Mockito.times(1)).findByUsername(USERNAME);
+        Mockito.verify(userRepoMock, times(1)).findByUsername(USERNAME);
 
     }
 
@@ -78,18 +83,18 @@ public class UserServiceImplTest {
     public void addUserDifferentPasswords() {
         when(userDtoMock.getPassword()).thenReturn("no_password");
         service.addUser(PASSWORD_CONFIRM, userDtoMock, bindingResult, model);
-        Mockito.verify(model, Mockito.times(1)).addAttribute("passwordError", "Passwords are different!");
+        Mockito.verify(model, times(1)).addAttribute("passwordError", "Passwords are different!");
     }
 
     @Test
     public void activateUser() {
         when(userMock.getDateOfRegistration()).thenReturn(System.currentTimeMillis());
         service.activateUser(CODE, model);
-        Mockito.verify(userRepoMock, Mockito.times(1)).findByActivationCode(CODE);
-        Mockito.verify(userMock, Mockito.times(1)).setActivationCode(null);
-        Mockito.verify(userMock, Mockito.times(1)).setActive(true);
-        Mockito.verify(userRepoMock, Mockito.times(1)).save(userMock);
-        Mockito.verify(model, Mockito.times(1)).addAttribute("message", "User successfully activated");
+        Mockito.verify(userRepoMock, times(1)).findByActivationCode(CODE);
+        Mockito.verify(userMock, times(1)).setActivationCode(null);
+        Mockito.verify(userMock, times(1)).setActive(true);
+        Mockito.verify(userRepoMock, times(1)).save(userMock);
+        Mockito.verify(model, times(1)).addAttribute("message", "User successfully activated");
     }
 
     @Test(expected = RuntimeException.class)
@@ -102,7 +107,7 @@ public class UserServiceImplTest {
     @Test
     public void activateUserCodeNotFound() {
         service.activateUser(CODE, model);
-        Mockito.verify(model, Mockito.times(1)).addAttribute("message", "Activation code is not valid or not found.");
+        Mockito.verify(model, times(1)).addAttribute("message", "Activation code is not valid or not found.");
 
     }
 
@@ -110,36 +115,37 @@ public class UserServiceImplTest {
     @Test
     public void findAll() {
         service.findAll(model);
-        Mockito.verify(model, Mockito.times(1)).addAttribute("users", users);
+        Mockito.verify(model, times(1)).addAttribute("users", users);
     }
 
     @Test
     public void changeUserRole() {
-        service.changeUserRole(userDtoMock, USERNAME, form);
-        Mockito.verify(userRepoMock, Mockito.times(1)).findByUsername(USERNAME);
-        Mockito.verify(userRepoMock, Mockito.times(1)).save(userMock);
+        service.changeUserRole(ID, USERNAME, form);
+        Mockito.verify(userRepoMock, times(1)).findById(ID);
+        Mockito.verify(userRepoMock, times(1)).save(userMock);
     }
 
     @Test
     public void getProfile() {
         service.getProfile(model, userDtoMock);
-        Mockito.verify(model, Mockito.times(1)).addAttribute("username", USERNAME);
-        Mockito.verify(model, Mockito.times(1)).addAttribute("email", EMAIL);
+        Mockito.verify(model, times(1)).addAttribute("username", USERNAME);
+        Mockito.verify(model, times(1)).addAttribute("email", EMAIL);
     }
 
     @Test
     public void updateProfile() {
         service.updateProfile(userDtoMock, PASSWORD_CONFIRM, EMAIL);
-        Mockito.verify(userRepoMock, Mockito.times(1)).findByUsername(USERNAME);
-        Mockito.verify(passwordEncoder, Mockito.times(1)).encode(PASSWORD_CONFIRM);
-        Mockito.verify(userRepoMock, Mockito.times(1)).save(userMock);
+        Mockito.verify(userRepoMock, times(1)).findByUsername(USERNAME);
+        Mockito.verify(passwordEncoder, times(1)).encode(PASSWORD_CONFIRM);
+        Mockito.verify(userRepoMock, times(1)).save(userMock);
     }
 
     @Test
     public void userEditForm() {
-        service.userEditForm(userDtoMock, model);
-        Mockito.verify(model, Mockito.times(1)).addAttribute("user", userDtoMock);
-        Mockito.verify(model, Mockito.times(1)).addAttribute("roles", Role.values());
+        service.userEditForm(ID, model);
+        Mockito.verify(userRepoMock, times(1)).findById(ID);
+        Mockito.verify(model, times(1)).addAttribute("user", userMock);
+        Mockito.verify(model, times(1)).addAttribute("roles", Role.values());
 
     }
 }

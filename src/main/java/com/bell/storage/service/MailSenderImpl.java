@@ -21,7 +21,6 @@ public class MailSenderImpl implements MailSender {
         this.mailSender = mailSender;
     }
 
-
     /**
      * {@inheritDoc}
      */

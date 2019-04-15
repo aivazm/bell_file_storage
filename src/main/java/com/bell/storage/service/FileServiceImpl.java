@@ -159,8 +159,8 @@ public class FileServiceImpl implements FileService {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity downloadFileById(Long id, UserDto userDto, Model model) {
-        if (userDto == null || id == null || id < 1 || model == null) {
+    public ResponseEntity downloadFileById(Long id, UserDto currentUserDto, Model model) {
+        if (currentUserDto == null || id == null || id < 1 || model == null) {
             throw new RuntimeException("Empty parameters");
         }
 
@@ -172,12 +172,11 @@ public class FileServiceImpl implements FileService {
         } else {
             throw new RuntimeException("File not found");
         }
-        getListOfFilesAndRequests(userRepo.findByUsername(userDto.getUsername()), model);
+        getListOfFilesAndRequests(userRepo.findByUsername(currentUserDto.getUsername()), model);
 
         usersFile.setDownloadCount(usersFile.getDownloadCount() + 1);
-        if (usersFileRepo.save(usersFile) == null) {
-            throw new RuntimeException("Error saving file");
-        }
+        usersFileRepo.save(usersFile);
+
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + usersFile.getFileName())

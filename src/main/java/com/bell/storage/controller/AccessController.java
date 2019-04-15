@@ -22,9 +22,9 @@ public class AccessController {
 
     /**
      * Отображение открытого доступа и запросов на доступ к просмотру и скачиванию файлов
-     * @param currentUserDto
-     * @param model
-     * @return
+     * @param currentUserDto объект класса UserDto
+     * @param model объект Model
+     * @return String имя страницы accessAndRequestPage.ftl
      */
     @GetMapping("/accessAndRequestPage/")
     public String getAccessAndRequest(
@@ -37,9 +37,9 @@ public class AccessController {
 
     /**
      * Запрос на доступ к просмотру файлов
-     * @param currentUserDto
-     * @param userId
-     * @return
+     * @param currentUserDto объект класса UserDto - текущий пользователь
+     * @param userId некоторое значение типа Long - id запрашиваемого пользователя
+     * @return String редирект на url /all-users
      */
     @GetMapping("/request-visible-access/{userId}")
     public String requestToVisibleAccess(
@@ -52,9 +52,9 @@ public class AccessController {
 
     /**
      * Запрос на доступ к скачиванию файлов
-     * @param currentUserDto
-     * @param userId
-     * @return
+     * @param currentUserDto объект класса UserDto - текущий пользователь
+     * @param userId некоторое значение типа Long - id запрашиваемого пользователя
+     * @return String редирект на url /all-users
      */
     @GetMapping("/request-download-access/{userId}")
     public String requestToDownloadAccess(
@@ -67,9 +67,9 @@ public class AccessController {
 
     /**
      * Подтверждение запроса на доступ к просмотру файлов
-     * @param currentUserDto
-     * @param userId
-     * @return
+     * @param currentUserDto объект класса UserDto - текущий пользователь
+     * @param userId некоторое значение типа Long - id запрашиваемого пользователя
+     * @return String редирект на url /accessAndRequestPage/
      */
     @GetMapping("/confirm-visible-access/{userId}")
     public String confirmVisibleAccess(
@@ -82,9 +82,9 @@ public class AccessController {
 
     /**
      * Подтверждение запроса на доступ к скачиванию файлов
-     * @param currentUserDto
-     * @param userId
-     * @return
+     * @param currentUserDto объект класса UserDto - текущий пользователь
+     * @param userId некоторое значение типа Long - id запрашиваемого пользователя
+     * @return String редирект на url /accessAndRequestPage/
      */
     @GetMapping("/confirm-download-access/{userId}")
     public String confirmDownloadAccess(
@@ -97,9 +97,9 @@ public class AccessController {
 
     /**
      * Отказ запроса  на доступ к просмотру файлов
-     * @param currentUserDto
-     * @param userId
-     * @return
+     * @param currentUserDto объект класса UserDto - текущий пользователь
+     * @param userId некоторое значение типа Long - id запрашиваемого пользователя
+     * @return String редирект на url /accessAndRequestPage/
      */
     @GetMapping("/refuse-visible-access/{userId}")
     public String refuseVisibleAccess(
@@ -112,9 +112,9 @@ public class AccessController {
 
     /**
      * Отказ запроса на доступ к скачиванию файлов
-     * @param currentUserDto
-     * @param userId
-     * @return
+     * @param currentUserDto объект класса UserDto - текущий пользователь
+     * @param userId некоторое значение типа Long - id запрашиваемого пользователя
+     * @return String редирект на url /accessAndRequestPage/
      */
     @GetMapping("/refuse-download-access/{userId}")
     public String refuseDownloadAccess(
@@ -127,9 +127,9 @@ public class AccessController {
 
     /**
      * Отмена доступа к просмотру файлов
-     * @param currentUserDto
-     * @param userId
-     * @return
+     * @param currentUserDto объект класса UserDto - текущий пользователь
+     * @param userId некоторое значение типа Long - id запрашиваемого пользователя
+     * @return String редирект на url /accessAndRequestPage/
      */
     @GetMapping("/cancel-visible-access/{userId}")
     public String cancelVisibleAccess(
@@ -142,9 +142,9 @@ public class AccessController {
 
     /**
      * Отмена доступа к скачиванию файлов
-     * @param currentUserDto
-     * @param userId
-     * @return
+     * @param currentUserDto объект класса UserDto - текущий пользователь
+     * @param userId некоторое значение типа Long - id запрашиваемого пользователя
+     * @return String редирект на url /accessAndRequestPage/
      */
     @GetMapping("/cancel-download-access/{userId}")
     public String cancelDownloadAccess(

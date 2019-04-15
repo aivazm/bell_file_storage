@@ -28,7 +28,7 @@ public class UserController {
 
     /**
      * Регистрация пользователя
-     * @return
+     * @return String имя страницы registration.ftl
      */
     @GetMapping("/registration")
     public String registration() {
@@ -37,11 +37,11 @@ public class UserController {
 
     /**
      * Регистрация пользователя
-     * @param passwordConfirm
-     * @param userDto
-     * @param bindingResult
-     * @param model
-     * @return
+     * @param passwordConfirm Значение повторного ввода пароля
+     * @param userDto объект класса UserDto
+     * @param bindingResult объект BindingResult
+     * @param model объект Model
+     * @return результат работы метода addUser(String passwordConfirm, UserDto userDto, BindingResult bindingResult, Model model)
      */
     @PostMapping("/registration")
     public String addUser(
@@ -55,9 +55,9 @@ public class UserController {
 
     /**
      * Активация пользователя
-     * @param model
-     * @param code
-     * @return
+     * @param model объект Model
+     * @param code код активации
+     * @return страница login.ftl
      */
     @GetMapping("/user/activate/{code}")
     public String activate(Model model, @PathVariable String code) {
@@ -67,8 +67,8 @@ public class UserController {
 
     /**
      * Представление списка пользователей
-     * @param model
-     * @return
+     * @param model объект Model
+     * @return страница userList.ftl
      */
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/user")
@@ -79,40 +79,41 @@ public class UserController {
 
     /**
      * Форма с ролями пользователя
-     * @param userDto
-     * @param model
-     * @return
+     * @param id идентификатор редактируемого пользователя
+     * @param model объект Model
+     * @return страница userEdit.ftl
      */
+
     @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping("/user/{user}")
-    public String userEditForm(@PathVariable(name = "user") UserDto userDto, Model model) {
-        userService.userEditForm(userDto, model);
+    @GetMapping("/user/{id}")
+    public String userEditForm(@PathVariable Long id, Model model) {
+        userService.userEditForm(id, model);
         return "userEdit";
     }
 
     /**
      * Изменение ролей пользователя
-     * @param username
-     * @param form
-     * @param userDto
-     * @return
+     * @param username имя пользователя
+     * @param form объект Map с ролями и менами пользователя
+     * @param userId идентификатор редактируемого пользователя
+     * @return редирект на url /user
      */
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/user")
     public String changeUserRole(
             @RequestParam String username,
             @RequestParam Map<String, String> form,
-            @RequestParam("userId") UserDto userDto
+            @RequestParam Long userId
     ) {
-        userService.changeUserRole(userDto, username, form);
+        userService.changeUserRole(userId, username, form);
         return "redirect:/user";
     }
 
     /**
      * Профиль пользователя
-     * @param model
-     * @param userDto
-     * @return
+     * @param model объект Model
+     * @param userDto объект UserDto
+     * @return страница profile.ftl
      */
     @GetMapping("/user/profile")
     public String getProfile(Model model, @AuthenticationPrincipal UserDto userDto) {
@@ -122,10 +123,10 @@ public class UserController {
 
     /**
      * Изменение пароля и почты пользователя
-     * @param userDto
-     * @param password
-     * @param email
-     * @return
+     * @param userDto объект UserDto
+     * @param password Новый пароль
+     * @param email Новый email
+     * @return редирект на url /user/profile
      */
     @PostMapping("/user/profile")
     public String updateProfile(

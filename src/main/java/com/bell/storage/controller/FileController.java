@@ -29,7 +29,7 @@ public class FileController {
     /**
      * Обработчик домашней страницы сервиса
      *
-     * @return
+     * @return String имя страницы greeting.ftl
      */
     @GetMapping("/")
     public String greeting() {
@@ -39,9 +39,9 @@ public class FileController {
     /**
      * Домашняя страница пользователя. Представляет файлы пользователя
      *
-     * @param currentUserDto
-     * @param model
-     * @return
+     * @param currentUserDto объект класса UserDto
+     * @param model объект Model
+     * @return String имя страницы main.ftl
      */
     @GetMapping("/main")
     public String getMyFiles(@AuthenticationPrincipal UserDto currentUserDto, Model model) {
@@ -52,11 +52,11 @@ public class FileController {
     /**
      * Добавление файла.
      *
-     * @param currentUserDto
-     * @param usersFileDto
-     * @param model
-     * @param file
-     * @return
+     * @param currentUserDto объект класса UserDto
+     * @param usersFileDto объект класса UsersFileDto
+     * @param model объект Model
+     * @param file объект MultipartFile
+     * @return String имя страницы main.ftl
      */
     @PostMapping("/main")
     public String addFile(
@@ -72,10 +72,10 @@ public class FileController {
     /**
      * Отображение страницы со списком файлов пользователя с идентификатором id
      *
-     * @param currentUserDto
-     * @param id
-     * @param model
-     * @return
+     * @param currentUserDto объект класса UserDto
+     * @param id значение типа Long. Идентификатор пользователя
+     * @param model объект Model
+     * @return String имя страницы userFiles.ftl
      */
     @GetMapping("/user-files/{id}")
     public String userFiles(
@@ -90,9 +90,9 @@ public class FileController {
     /**
      * Отображение списка пользователей
      *
-     * @param currentUserDto
-     * @param model
-     * @return
+     * @param currentUserDto объект класса UserDto
+     * @param model объект Model
+     * @return String имя страницы allUsers.ftl
      */
     @GetMapping("/all-users")
     public String getAllUsers(
@@ -106,10 +106,10 @@ public class FileController {
     /**
      * Удалить файл по id
      *
-     * @param currentUserDto
-     * @param id
-     * @param model
-     * @return
+     * @param currentUserDto объект класса UserDto
+     * @param id некоторое значение типа Long
+     * @param model объект Model
+     * @return String. результат работы метода deleteFileById(UserDto currentUserDto, Long id, Model model)
      */
     @GetMapping("/delete-file/{id}")
     public String deleteFileById(
@@ -123,10 +123,10 @@ public class FileController {
     /**
      * Скачать файл по id
      *
-     * @param currentUserDto
-     * @param id
-     * @param model
-     * @return
+     * @param currentUserDto объект класса UserDto
+     * @param id некоторое значение типа Long
+     * @param model объект Model
+     * @return ResponseEntity с объектом ByteArrayResource в теле
      */
     @ResponseBody
     @GetMapping("/download-file/{id}")

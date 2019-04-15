@@ -12,9 +12,9 @@ import java.util.stream.Collectors;
  */
 public class ControllerUtils {
     /**
-     * ПОлучить ошибки валидации
-     * @param bindingResult
-     * @return
+     * Получить ошибки валидации
+     * @param bindingResult объект BindingResult
+     * @return Мапа с ошибками
      */
     public static Map<String, String> getErrors(BindingResult bindingResult) {
         Collector<FieldError, ?, Map<String, String>> collector = Collectors.toMap(
